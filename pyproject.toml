@@ -1,0 +1,60 @@
+[project]
+name = "llm-html-processor"
+version = "0.1.0"
+description = "Procesador de HTML multilingüe con LLMs"
+authors = [
+    {name = "Doctor Hidden"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "beautifulsoup4 (>=4.13.4,<5.0.0)",
+    "openai (>=1.86.0,<2.0.0)",
+    "pydantic (>=2.11.7,<3.0.0)",
+    "tiktoken (>=0.9.0,<0.10.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "jinja2 (>=3.1.6,<4.0.0)",
+    "google-genai (>=0.3.0,<0.4.0)",
+    "httpx (>=0.27.0,<0.28.0)"
+]
+
+[tool.poetry]
+name = "llm-html-processor"
+version = "0.1.0"
+description = "Procesador de HTML multilingüe con LLMs"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "llm_html_processor"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+beautifulsoup4 = "^4.12.0"
+openai = "^1.14.0"
+pydantic = "^2.7.0"
+tiktoken = "^0.6.0"
+python-dotenv = "^1.0.0"
+jinja2 = "^3.1.0"
+google-genai = "^0.3.0"
+httpx = "^0.27.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.0"
+ruff = "^0.3.0"
+isort = "^5.13.0"
+mypy = "^1.8.0"
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+pre-commit = "^3.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
