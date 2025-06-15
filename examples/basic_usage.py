@@ -4,10 +4,10 @@ Ejemplo básico de uso del procesador HTML con diferentes clientes LLM.
 
 import os
 from dotenv import load_dotenv
-from llm_html_processor.llm.factory import create_llm_client
-from llm_html_processor.models import ProcessingOptions, TextChunk
-from llm_html_processor.core.extractor import extract_text_nodes
-from llm_html_processor.core.injector import inject_text
+from src.llm.factory import create_llm_client
+from src.models import ProcessingOptions, TextChunk
+from src.core.extractor import extract_text_nodes
+from src.core.injector import inject_text
 
 # Cargar variables de entorno
 load_dotenv()
