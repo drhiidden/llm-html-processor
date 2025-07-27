@@ -3,10 +3,12 @@ Cliente LLM para OpenAI.
 """
 
 import os
-from typing import List, Any
+import tiktoken
+from typing import List, Any, Dict, Optional
 from openai import OpenAI, OpenAIError
 from .base import LLMClient, ChatMessage
 from .retry import retry_with_backoff, handle_http_errors
+from .cache import global_cache
 from .errors import (
     LLMError,
     RateLimitError,
@@ -44,15 +46,51 @@ class OpenAIClient(LLMClient):
             api_key=self.api_key,
             timeout=self.timeout
         )
+        
+        # Inicializar tokenizer
+        try:
+            self.tokenizer = tiktoken.encoding_for_model(model)
+        except KeyError:
+            # Fallback para modelos no reconocidos
+            self.tokenizer = tiktoken.get_encoding("cl100k_base")
+    
+    def get_model_name(self) -> str:
+        """
+        Obtiene el nombre del modelo utilizado.
+        
+        Returns:
+            str: Nombre del modelo
+        """
+        return self.model
+    
+    def get_token_count(self, text: str) -> int:
+        """
+        Estima el número de tokens en un texto.
+        
+        Args:
+            text: Texto a analizar
+            
+        Returns:
+            int: Número estimado de tokens
+        """
+        if not text:
+            return 0
+        return len(self.tokenizer.encode(text))
     
     @retry_with_backoff(max_retries=3)
     @handle_http_errors
-    def chat(self, messages: List[ChatMessage], **params: Any) -> str:
+    def chat(
+        self, 
+        messages: List[ChatMessage], 
+        use_cache: bool = True,
+        **params: Any
+    ) -> str:
         """
         Envía mensajes al modelo de OpenAI y obtiene una respuesta.
         
         Args:
             messages: Lista de mensajes para el chat
+            use_cache: Si se debe usar la caché
             **params: Parámetros adicionales (temperature, max_tokens, etc.)
             
         Returns:
@@ -64,6 +102,12 @@ class OpenAIClient(LLMClient):
             AuthenticationError: Si hay un error de autenticación
             ModelError: Si hay un error con el modelo
         """
+        # Verificar caché primero
+        if use_cache:
+            cached_response = global_cache.get(messages, self.model, params)
+            if cached_response:
+                return cached_response
+        
         try:
             formatted_messages = [
                 {"role": msg.role, "content": msg.content}
@@ -76,7 +120,13 @@ class OpenAIClient(LLMClient):
                 **params
             )
             
-            return response.choices[0].message.content
+            result = response.choices[0].message.content
+            
+            # Guardar en caché si está habilitado
+            if use_cache and result:
+                global_cache.set(messages, self.model, params, result)
+            
+            return result
             
         except OpenAIError as e:
             if "rate_limit" in str(e).lower():

@@ -4,63 +4,78 @@ Ejemplo básico de uso del procesador HTML con diferentes clientes LLM.
 
 import os
 from dotenv import load_dotenv
-from src.llm.factory import create_llm_client
-from src.models import ProcessingOptions, TextChunk
-from src.core.extractor import extract_text_nodes
-from src.core.injector import inject_text
+from src.models import ProcessingOptions
+from src.pipeline import process_html
+from src.utils.logging import get_logger, LogConfig, setup_logging
+
+# Configurar logging más detallado para ejemplos
+logger = setup_logging(
+    "examples",
+    LogConfig(level="DEBUG", console=True)
+)
 
 # Cargar variables de entorno
 load_dotenv()
 
-def process_with_llm(html: str, provider: str, model: str | None = None) -> str:
-    """
-    Procesa HTML usando el proveedor LLM especificado.
-    
-    Args:
-        html: HTML a procesar
-        provider: Proveedor LLM ("openai", "gemini", "local")
-        model: Modelo específico a usar (opcional)
-        
-    Returns:
-        str: HTML procesado
-    """
-    # Extraer nodos de texto
-    chunks = extract_text_nodes(html)
-    
-    # Crear cliente LLM
-    llm = create_llm_client(provider, model)
-    
-    # Procesar cada chunk
-    for chunk in chunks:
-        messages = [
-            ChatMessage("system", "Eres un asistente que reescribe texto preservando su significado."),
-            ChatMessage("user", f"Reescribe este texto: {chunk.text}")
-        ]
-        
-        response = llm.chat(messages, temperature=0.7)
-        chunk.text = response
-    
-    # Reinyectar texto procesado
-    return inject_text(html, chunks)
-
-if __name__ == "__main__":
-    # HTML de ejemplo
+def main():
+    """Función principal del ejemplo."""
+    # HTML de ejemplo con texto en hebreo y en inglés
     html = """
     <html>
+        <head>
+            <title>דף לדוגמה | Example Page</title>
+        </head>
         <body>
-            <p>שלום עולם</p>
-            <p>Hello World</p>
+            <h1 dir="rtl">שלום עולם</h1>
+            <p dir="rtl">זהו מסמך לדוגמה עם טקסט בעברית</p>
+            <div class="english-section">
+                <h2>Hello World</h2>
+                <p>This is an example document with text in English</p>
+            </div>
         </body>
     </html>
     """
     
-    # Procesar con diferentes proveedores
-    providers = ["openai", "gemini", "local"]
+    logger.info("Iniciando ejemplo de procesamiento HTML")
     
-    for provider in providers:
-        try:
-            print(f"\nProcesando con {provider}...")
-            result = process_with_llm(html, provider)
-            print(f"Resultado ({provider}):\n{result}")
-        except Exception as e:
-            print(f"Error con {provider}: {e}") 
+    # Procesar con diferentes proveedores y tareas
+    providers = [
+        ("openai", "gpt-4o-mini"),
+        ("gemini", "gemini-pro"),
+        ("local", "llama2")
+    ]
+    
+    tasks = ["paraphrase", "summarize"]
+    
+    for provider_name, model_name in providers:
+        for task in tasks:
+            try:
+                logger.info(f"Procesando con {provider_name}/{model_name} - Tarea: {task}")
+                
+                # Configurar opciones
+                options = ProcessingOptions(
+                    task=task,
+                    language="he",  # Idioma principal
+                    model=model_name,
+                    temperature=0.7,
+                    preserve_html=True,
+                    use_cache=True  # Usar caché para evitar llamadas repetidas
+                )
+                
+                # Procesar HTML
+                result = process_html(html, options)
+                
+                # Mostrar resultado y estadísticas
+                logger.info(f"Resultado ({provider_name}/{task}):")
+                logger.info(f"Tokens entrada: {result.stats.get('total_tokens_in', 0)}")
+                logger.info(f"Tokens salida: {result.stats.get('total_tokens_out', 0)}")
+                logger.info(f"Tiempo: {result.stats.get('processing_time', 0):.2f}s")
+                logger.info(f"HTML resultante:\n{result.html[:500]}...")
+                
+            except Exception as e:
+                logger.error(f"Error con {provider_name}/{task}: {e}")
+                
+    logger.info("Ejemplo completado")
+
+if __name__ == "__main__":
+    main() 
