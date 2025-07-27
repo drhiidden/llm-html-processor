@@ -15,11 +15,16 @@ dependencies = [
     "python-dotenv (>=1.1.0,<2.0.0)",
     "jinja2 (>=3.1.6,<4.0.0)",
     "google-genai (>=0.3.0,<0.4.0)",
-    "httpx (>=0.27.0,<0.28.0)"
+    "httpx (>=0.27.0,<0.28.0)",
+    "flask (>=2.3.0,<3.0.0)",
+    "flask-wtf (>=1.2.0,<2.0.0)",
+    "flask-login (>=0.6.3,<0.7.0)",
+    "gunicorn (>=21.2.0,<22.0.0)"
 ]
 
 [project.scripts]
 llm-html-processor = "llm_html_processor:cli_main"
+llm-html-server = "llm_html_processor.web:run_server"
 
 [tool.poetry]
 name = "llm-html-processor"
@@ -39,6 +44,10 @@ python-dotenv = "^1.0.0"
 jinja2 = "^3.1.0"
 google-genai = "^0.3.0"
 httpx = "^0.27.0"
+flask = "^2.3.0"
+flask-wtf = "^1.2.0"
+flask-login = "^0.6.3"
+gunicorn = "^21.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.0"
@@ -51,6 +60,7 @@ pre-commit = "^3.6.0"
 
 [tool.poetry.scripts]
 llm-html-processor = "llm_html_processor:cli_main"
+llm-html-server = "llm_html_processor.web:run_server"
 
 [build-system]
 requires = ["poetry-core"]
