@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+
+{% block title %}LLM HTML Processor - Procesador de HTML multilingüe con LLMs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold">Procesa HTML con IA</h1>
+            <p class="lead mb-4">
+                Reescribe, resume o traduce contenido HTML preservando su estructura. 
+                Soporte multilingüe con enfoque en idiomas RTL como hebreo y árabe.
+            </p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Comenzar Gratis</a>
+                <a href="{{ url_for('main.plans') }}" class="btn btn-outline-secondary btn-lg px-4">Ver Planes</a>
+            </div>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="HTML Processing" class="img-fluid" style="max-height: 400px;">
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row py-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">Características Principales</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-language fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Multilingüe</h3>
+                    <p class="card-text">
+                        Soporte completo para idiomas RTL como hebreo y árabe, 
+                        preservando la dirección del texto y formato.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-code fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Preserva Estructura HTML</h3>
+                    <p class="card-text">
+                        Mantiene intacta la estructura HTML mientras procesa solo el contenido textual.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title h5">Múltiples LLMs</h3>
+                    <p class="card-text">
+                        Integración con OpenAI GPT, Google Gemini y modelos locales para máxima flexibilidad.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row py-5 bg-light rounded-3 my-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">Cómo Funciona</h2>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fas fa-upload fa-2x text-primary"></i>
+            </div>
+            <h3 class="h5 mt-3">1. Sube tu HTML</h3>
+            <p>Sube tu archivo HTML o pega el código directamente.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fas fa-cog fa-2x text-primary"></i>
+            </div>
+            <h3 class="h5 mt-3">2. Configura opciones</h3>
+            <p>Elige la tarea, idioma y modelo LLM a utilizar.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fas fa-magic fa-2x text-primary"></i>
+            </div>
+            <h3 class="h5 mt-3">3. Procesa</h3>
+            <p>Nuestros modelos de IA procesan el contenido preservando la estructura.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <i class="fas fa-download fa-2x text-primary"></i>
+            </div>
+            <h3 class="h5 mt-3">4. Descarga</h3>
+            <p>Obtén tu HTML procesado listo para usar.</p>
+        </div>
+    </div>
+
+    <!-- Use Cases Section -->
+    <div class="row py-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">Casos de Uso</h2>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5">
+                        <i class="fas fa-globe text-primary me-2"></i>
+                        Localización de sitios web
+                    </h3>
+                    <p class="card-text">
+                        Traduce contenido web manteniendo la estructura HTML intacta, 
+                        ideal para sitios multilingües.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5">
+                        <i class="fas fa-store text-primary me-2"></i>
+                        Comercio electrónico
+                    </h3>
+                    <p class="card-text">
+                        Reescribe descripciones de productos para mejorar SEO 
+                        o adaptar a diferentes mercados.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5">
+                        <i class="fas fa-newspaper text-primary me-2"></i>
+                        Medios y publicaciones
+                    </h3>
+                    <p class="card-text">
+                        Genera resúmenes de artículos o adapta contenido para 
+                        diferentes audiencias.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title h5">
+                        <i class="fas fa-code-branch text-primary me-2"></i>
+                        Desarrollo web
+                    </h3>
+                    <p class="card-text">
+                        Automatiza la generación de contenido para prototipos 
+                        o versiones de prueba.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row py-5 text-center bg-primary text-white rounded-3 my-5">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="fw-bold">¿Listo para comenzar?</h2>
+            <p class="lead mb-4">
+                Regístrate gratis y comienza a procesar tu contenido HTML hoy mismo.
+            </p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-4 me-sm-3">Registrarse</a>
+                <a href="{{ url_for('main.plans') }}" class="btn btn-outline-light btn-lg px-4">Ver Planes</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

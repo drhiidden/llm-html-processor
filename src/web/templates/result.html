@@ -1,0 +1,357 @@
+{% extends "layout.html" %}
+
+{% block title %}Resultado - LLM HTML Processor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .code-display {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        overflow: auto;
+        max-height: 500px;
+    }
+    
+    .diff-view {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .diff-column {
+        flex: 1;
+    }
+    
+    .stats-card {
+        border-left: 4px solid #4e73df;
+    }
+    
+    .preview-frame {
+        width: 100%;
+        height: 500px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.documents') }}">Documentos</a></li>
+                    <li class="breadcrumb-item active">Resultado</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Resultado del Procesamiento</h1>
+            
+            <!-- Result Info Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">Información</h5>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ url_for('main.process') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i> Nuevo Procesamiento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> {{ doc.id }}</p>
+                            <p>
+                                <strong>Tarea:</strong>
+                                {% if doc.task == "paraphrase" %}
+                                    <span class="badge bg-primary">Reescribir</span>
+                                {% elif doc.task == "summarize" %}
+                                    <span class="badge bg-success">Resumir</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ doc.task }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Modelo:</strong> {{ doc.model }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Fecha:</strong> {{ doc.created_at|datetime }}</p>
+                            <p><strong>Tokens de entrada:</strong> {{ doc.stats.get('total_tokens_in', 0) }}</p>
+                            <p><strong>Tokens de salida:</strong> {{ doc.stats.get('total_tokens_out', 0) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs for different views -->
+            <ul class="nav nav-tabs mb-4" id="resultTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="preview-tab" data-bs-toggle="tab" 
+                        data-bs-target="#preview-content" type="button" role="tab">
+                        <i class="fas fa-eye me-2"></i>Vista Previa
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="code-tab" data-bs-toggle="tab" 
+                        data-bs-target="#code-content" type="button" role="tab">
+                        <i class="fas fa-code me-2"></i>Código HTML
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="stats-tab" data-bs-toggle="tab" 
+                        data-bs-target="#stats-content" type="button" role="tab">
+                        <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content" id="resultTabsContent">
+                <!-- Preview Tab -->
+                <div class="tab-pane fade show active" id="preview-content" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Vista Previa del Resultado</h5>
+                            <iframe id="previewFrame" class="preview-frame" sandbox="allow-same-origin"></iframe>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Tab -->
+                <div class="tab-pane fade" id="code-content" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Código HTML</h5>
+                            
+                            <div class="btn-group mb-3" role="group">
+                                <button type="button" class="btn btn-outline-primary" id="showOriginal">Original</button>
+                                <button type="button" class="btn btn-outline-primary active" id="showProcessed">Procesado</button>
+                                <button type="button" class="btn btn-outline-primary" id="showDiff">Diferencias</button>
+                            </div>
+                            
+                            <div id="originalCode" class="code-display" style="display: none;">
+                                <pre><code>{{ doc.original_html|e }}</code></pre>
+                            </div>
+                            
+                            <div id="processedCode" class="code-display">
+                                <pre><code>{{ doc.processed_html|e }}</code></pre>
+                            </div>
+                            
+                            <div id="diffView" class="code-display diff-view" style="display: none;">
+                                <div class="diff-column">
+                                    <h6>Original</h6>
+                                    <pre><code>{{ doc.original_html|e }}</code></pre>
+                                </div>
+                                <div class="diff-column">
+                                    <h6>Procesado</h6>
+                                    <pre><code>{{ doc.processed_html|e }}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button class="btn btn-primary" id="copyHtml">
+                                    <i class="fas fa-copy me-1"></i> Copiar HTML
+                                </button>
+                                <a href="#" class="btn btn-secondary" id="downloadHtml">
+                                    <i class="fas fa-download me-1"></i> Descargar HTML
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Tab -->
+                <div class="tab-pane fade" id="stats-content" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Estadísticas de Procesamiento</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card stats-card h-100">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col">
+                                                    <h6 class="text-primary fw-bold text-uppercase mb-1">
+                                                        Tiempo de Procesamiento
+                                                    </h6>
+                                                    <div class="h5 mb-0 fw-bold">
+                                                        {{ "%.2f"|format(doc.stats.get('processing_time', 0)) }} segundos
+                                                    </div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="card stats-card h-100">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col">
+                                                    <h6 class="text-primary fw-bold text-uppercase mb-1">
+                                                        Total de Tokens
+                                                    </h6>
+                                                    <div class="h5 mb-0 fw-bold">
+                                                        {{ doc.stats.get('total_tokens_in', 0) + doc.stats.get('total_tokens_out', 0) }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-coins fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="card stats-card h-100">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col">
+                                                    <h6 class="text-primary fw-bold text-uppercase mb-1">
+                                                        Chunks Procesados
+                                                    </h6>
+                                                    <div class="h5 mb-0 fw-bold">
+                                                        {{ doc.stats.get('chunks_processed', 0) }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-puzzle-piece fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="card stats-card h-100">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col">
+                                                    <h6 class="text-primary fw-bold text-uppercase mb-1">
+                                                        Errores
+                                                    </h6>
+                                                    <div class="h5 mb-0 fw-bold">
+                                                        {{ doc.stats.get('errors', 0) }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Stats -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Detalles Adicionales</h6>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="mb-0">{{ doc.stats|tojson(indent=2) }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up preview iframe
+        const previewFrame = document.getElementById('previewFrame');
+        const processedHtml = {{ doc.processed_html|tojson }};
+        
+        const frameDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(processedHtml);
+        frameDoc.close();
+        
+        // Code view toggle buttons
+        const showOriginalBtn = document.getElementById('showOriginal');
+        const showProcessedBtn = document.getElementById('showProcessed');
+        const showDiffBtn = document.getElementById('showDiff');
+        
+        const originalCode = document.getElementById('originalCode');
+        const processedCode = document.getElementById('processedCode');
+        const diffView = document.getElementById('diffView');
+        
+        showOriginalBtn.addEventListener('click', function() {
+            originalCode.style.display = 'block';
+            processedCode.style.display = 'none';
+            diffView.style.display = 'none';
+            
+            showOriginalBtn.classList.add('active');
+            showProcessedBtn.classList.remove('active');
+            showDiffBtn.classList.remove('active');
+        });
+        
+        showProcessedBtn.addEventListener('click', function() {
+            originalCode.style.display = 'none';
+            processedCode.style.display = 'block';
+            diffView.style.display = 'none';
+            
+            showOriginalBtn.classList.remove('active');
+            showProcessedBtn.classList.add('active');
+            showDiffBtn.classList.remove('active');
+        });
+        
+        showDiffBtn.addEventListener('click', function() {
+            originalCode.style.display = 'none';
+            processedCode.style.display = 'none';
+            diffView.style.display = 'flex';
+            
+            showOriginalBtn.classList.remove('active');
+            showProcessedBtn.classList.remove('active');
+            showDiffBtn.classList.add('active');
+        });
+        
+        // Copy HTML button
+        document.getElementById('copyHtml').addEventListener('click', function() {
+            const textarea = document.createElement('textarea');
+            textarea.value = processedHtml;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            alert('HTML copiado al portapapeles');
+        });
+        
+        // Download HTML button
+        document.getElementById('downloadHtml').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const blob = new Blob([processedHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'processed_' + new Date().toISOString().slice(0, 10) + '.html';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+        });
+    });
+</script>
+{% endblock %} 

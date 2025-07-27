@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block title %}Mi Perfil - LLM HTML Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3">
+            <!-- Sidebar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Mi Cuenta</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('auth.profile') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i> Perfil
+                    </a>
+                    <a href="{{ url_for('auth.change_password') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i> Cambiar Contraseña
+                    </a>
+                    <a href="{{ url_for('main.dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Plan Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Mi Plan</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ current_user.get_plan_config()['name'] }}</h6>
+                    <p class="card-text">
+                        <strong>Documentos:</strong> 
+                        {{ current_user.documents_processed }} / 
+                        {% if current_user.get_plan_config()['max_documents'] == -1 %}
+                            Ilimitados
+                        {% else %}
+                            {{ current_user.get_plan_config()['max_documents'] }}
+                        {% endif %}
+                    </p>
+                    <p class="card-text">
+                        <strong>Tamaño máx.:</strong> {{ current_user.get_plan_config()['max_size_kb'] }} KB
+                    </p>
+                    <a href="{{ url_for('main.plans') }}" class="btn btn-outline-primary btn-sm">
+                        Actualizar Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <!-- Profile Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('auth.profile') }}">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- API Key -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">API Key</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tu API Key</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ current_user.api_key }}" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyApiKey()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            {% if current_user.subscription_plan in ['pro', 'enterprise'] %}
+                                Usa esta API Key para acceder a la API REST.
+                            {% else %}
+                                Actualiza a un plan Pro o Enterprise para acceder a la API REST.
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="post" action="{{ url_for('auth.regenerate_api_key') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="fas fa-sync-alt me-1"></i> Regenerar API Key
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Usage Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Estadísticas de Uso</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Documentos Procesados</h6>
+                                <h3>{{ current_user.documents_processed }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Total de Tokens</h6>
+                                <h3>{{ current_user.total_tokens }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyApiKey() {
+        const apiKeyInput = document.querySelector('input[value="{{ current_user.api_key }}"]');
+        apiKeyInput.select();
+        document.execCommand('copy');
+        
+        // Show tooltip or notification
+        alert('API Key copiada al portapapeles');
+    }
+</script>
+{% endblock %} 

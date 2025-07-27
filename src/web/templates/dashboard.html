@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - LLM HTML Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">Dashboard</h1>
+            
+            <!-- Welcome and CTA -->
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4>Bienvenido, {{ current_user.name }}</h4>
+                            <p class="mb-md-0">
+                                Plan actual: <strong>{{ stats.plan.name }}</strong> |
+                                Documentos procesados: <strong>{{ stats.documents_processed }}</strong> /
+                                {% if stats.plan.max_documents == -1 %}
+                                    <strong>Ilimitados</strong>
+                                {% else %}
+                                    <strong>{{ stats.plan.max_documents }}</strong>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('main.process') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Nuevo Procesamiento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-uppercase mb-1 text-primary fw-bold small">
+                                Documentos Procesados
+                            </div>
+                            <div class="h5 mb-0 fw-bold">{{ stats.documents_processed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-uppercase mb-1 text-success fw-bold small">
+                                Total Tokens
+                            </div>
+                            <div class="h5 mb-0 fw-bold">{{ stats.total_tokens }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-uppercase mb-1 text-info fw-bold small">
+                                Uso del Plan
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 me-3 fw-bold">
+                                        {% if stats.plan.max_documents == -1 %}
+                                            Ilimitado
+                                        {% else %}
+                                            {{ (stats.documents_processed / stats.plan.max_documents * 100) | int }}%
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    {% if stats.plan.max_documents != -1 %}
+                                    <div class="progress progress-sm me-2">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                            style="width: {{ (stats.documents_processed / stats.plan.max_documents * 100) | int }}%"></div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Documents -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold">Documentos Recientes</h6>
+                    <a href="{{ url_for('main.documents') }}" class="btn btn-sm btn-primary">
+                        Ver Todos
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tarea</th>
+                                        <th>Modelo</th>
+                                        <th>Fecha</th>
+                                        <th>Tokens</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in documents %}
+                                    <tr>
+                                        <td>{{ doc.id[:8] }}...</td>
+                                        <td>
+                                            {% if doc.task == "paraphrase" %}
+                                                <span class="badge bg-primary">Reescribir</span>
+                                            {% elif doc.task == "summarize" %}
+                                                <span class="badge bg-success">Resumir</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ doc.task }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ doc.model }}</td>
+                                        <td>{{ doc.created_at|datetime }}</td>
+                                        <td>
+                                            {{ doc.stats.get('total_tokens_in', 0) + doc.stats.get('total_tokens_out', 0) }}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('main.result', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-alt fa-3x text-gray-300 mb-3"></i>
+                            <p class="mb-0">No hay documentos procesados aún.</p>
+                            <a href="{{ url_for('main.process') }}" class="btn btn-primary mt-3">
+                                Procesar Primer Documento
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

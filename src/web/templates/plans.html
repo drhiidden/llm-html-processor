@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+
+{% block title %}Planes de Suscripción - LLM HTML Processor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">Planes de Suscripción</h1>
+            <p class="lead">Elige el plan que mejor se adapte a tus necesidades</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        {% for plan in plans %}
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 {% if plan.id == 'pro' %}border-primary{% endif %}">
+                {% if plan.id == 'pro' %}
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h6 class="mb-0">Recomendado</h6>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title text-center">{{ plan.config.name }}</h5>
+                    <h2 class="text-center mb-4">
+                        {% if plan.config.price == 0 %}
+                            Gratis
+                        {% else %}
+                            ${{ plan.config.price }}<small class="text-muted">/mes</small>
+                        {% endif %}
+                    </h2>
+                    
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {% if plan.config.max_documents == -1 %}
+                                Documentos ilimitados
+                            {% else %}
+                                {{ plan.config.max_documents }} documentos/mes
+                            {% endif %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Tamaño máximo: {{ plan.config.max_size_kb }} KB
+                        </li>
+                        {% for feature in plan.config.features %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ feature }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer text-center">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.subscription_plan == plan.id %}
+                            <button class="btn btn-success w-100" disabled>Plan Actual</button>
+                        {% else %}
+                            <a href="#" class="btn {% if plan.id == 'pro' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">
+                                Seleccionar
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn {% if plan.id == 'pro' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">
+                            {% if plan.id == 'free' %}
+                                Comenzar Gratis
+                            {% else %}
+                                Seleccionar
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Comparación de Planes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Característica</th>
+                                    {% for plan in plans %}
+                                    <th class="text-center">{{ plan.config.name }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Precio mensual</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">
+                                        {% if plan.config.price == 0 %}
+                                            Gratis
+                                        {% else %}
+                                            ${{ plan.config.price }}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Documentos por mes</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">
+                                        {% if plan.config.max_documents == -1 %}
+                                            Ilimitados
+                                        {% else %}
+                                            {{ plan.config.max_documents }}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Tamaño máximo por documento</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">{{ plan.config.max_size_kb }} KB</td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Acceso a API</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">
+                                        {% if plan.id in ['pro', 'enterprise'] %}
+                                            <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Soporte prioritario</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">
+                                        {% if plan.id in ['pro', 'enterprise'] %}
+                                            <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Estadísticas avanzadas</td>
+                                    {% for plan in plans %}
+                                    <td class="text-center">
+                                        {% if plan.id in ['pro', 'enterprise'] %}
+                                            <i class="fas fa-check text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-times text-danger"></i>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Preguntas Frecuentes</h2>
+            
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                            ¿Puedo cambiar de plan en cualquier momento?
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Sí, puedes actualizar o cambiar tu plan en cualquier momento. Los cambios se aplicarán inmediatamente.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                            ¿Qué métodos de pago aceptan?
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Aceptamos tarjetas de crédito/débito (Visa, Mastercard, American Express) y PayPal.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                            ¿Ofrecen planes personalizados para empresas?
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Sí, ofrecemos planes personalizados para empresas con necesidades específicas. Contáctanos para más información.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                            ¿Cómo funciona la API REST?
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            La API REST está disponible para los planes Pro y Enterprise. Proporciona endpoints para procesar HTML y gestionar documentos. Puedes encontrar más información en la documentación de la API.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -3,6 +3,7 @@ Aplicación Flask para la interfaz web y API REST.
 """
 
 import os
+import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user
@@ -83,6 +84,14 @@ def create_app(test_config=None):
     @login_manager.user_loader
     def load_user(user_id):
         return User.get(user_id)
+    
+    # Filtros de Jinja
+    @app.template_filter('datetime')
+    def format_datetime(value):
+        if not value:
+            return ""
+        dt = datetime.datetime.fromtimestamp(value)
+        return dt.strftime('%d/%m/%Y %H:%M')
     
     # Ruta de prueba
     @app.route('/ping')

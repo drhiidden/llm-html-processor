@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+
+{% block title %}Procesar HTML - LLM HTML Processor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tab-content {
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        padding: 20px;
+    }
+    
+    .custom-file-label::after {
+        content: "Buscar";
+    }
+    
+    .code-editor {
+        font-family: monospace;
+        min-height: 300px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">Procesar HTML</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('main.process') }}" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-3" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="file-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#file-content" type="button" role="tab">
+                                    <i class="fas fa-file me-2"></i>Archivo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="text-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#text-content" type="button" role="tab">
+                                    <i class="fas fa-code me-2"></i>Código HTML
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="inputTabsContent">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="file-content" role="tabpanel">
+                                <div class="mb-3">
+                                    <label class="form-label">Subir archivo HTML</label>
+                                    <div class="input-group">
+                                        {{ form.html_file(class="form-control" + (" is-invalid" if form.html_file.errors else "")) }}
+                                    </div>
+                                    {% if form.html_file.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.html_file.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Tamaño máximo: {{ current_user.get_plan_config()['max_size_kb'] }} KB</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Text Input Tab -->
+                            <div class="tab-pane fade" id="text-content" role="tabpanel">
+                                <div class="mb-3">
+                                    <label class="form-label">Pegar código HTML</label>
+                                    {{ form.html_text(class="form-control code-editor" + (" is-invalid" if form.html_text.errors else ""), rows="12") }}
+                                    {% if form.html_text.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.html_text.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <!-- Task Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.task.label }}</label>
+                                {{ form.task(class="form-select" + (" is-invalid" if form.task.errors else "")) }}
+                                {% if form.task.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.task.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Language -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.language.label }}</label>
+                                {{ form.language(class="form-control" + (" is-invalid" if form.language.errors else "")) }}
+                                {% if form.language.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.language.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Model Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.model.label }}</label>
+                                {{ form.model(class="form-select" + (" is-invalid" if form.model.errors else "")) }}
+                                {% if form.model.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.model.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Cache Option -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.use_cache(class="form-check-input") }}
+                                    <label class="form-check-label">
+                                        {{ form.use_cache.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Prompt (conditional) -->
+                            <div class="col-12 mb-3" id="customPromptSection" style="display: none;">
+                                <label class="form-label">{{ form.custom_prompt.label }}</label>
+                                {{ form.custom_prompt(class="form-control" + (" is-invalid" if form.custom_prompt.errors else ""), rows="3") }}
+                                {% if form.custom_prompt.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.custom_prompt.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide custom prompt based on task selection
+        const taskSelect = document.getElementById('task');
+        const customPromptSection = document.getElementById('customPromptSection');
+        
+        function updateCustomPromptVisibility() {
+            if (taskSelect.value === 'custom') {
+                customPromptSection.style.display = 'block';
+            } else {
+                customPromptSection.style.display = 'none';
+            }
+        }
+        
+        // Initial check
+        updateCustomPromptVisibility();
+        
+        // Listen for changes
+        taskSelect.addEventListener('change', updateCustomPromptVisibility);
+    });
+</script>
+{% endblock %} 
